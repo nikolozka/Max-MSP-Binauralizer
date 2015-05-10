@@ -1,0 +1,340 @@
+/**
+ @file
+ convolver - A low pass controllable with freq and res
+ 
+ updated 3/22/09 ajm: new API
+ 
+ @ingroup	examples	
+ */
+
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "ext.h"
+#include "ext_obex.h"
+#include "z_dsp.h"
+
+#define L_BUFF 200
+
+void *convolver_class;
+
+typedef struct _convolver
+{
+	t_pxobject l_obj;
+
+	int az, el;
+
+	//new junk
+	double hrir_l[25][50][200];
+	double hrir_r[25][50][200];
+	
+	double IDT[25][50];
+
+	t_double buff[L_BUFF];
+	
+	//new junk
+
+	short l_rcon;			// is a signal connected to the resonance inlet 
+	short l_fcon;			// is a signal connected to the frequency inlet
+} t_convolver;
+
+void convolver_dsp(t_convolver *x, t_signal **sp, short *count);
+void convolver_dsp64(t_convolver *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void convolver_perform64(t_convolver *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+t_int *convolver_perform(t_int *w);
+void convolver_int(t_convolver *x, long n);
+void convolver_float(t_convolver *x, double f);
+void convolver_clear(t_convolver *x);
+void convolver_assist(t_convolver *x, void *b, long m, long a, char *s);
+void *convolver_new();
+
+bool parser();
+bool get_hrir(const char *path, double arr[25][50][200]);
+bool get_IDT(const char *path, double arr[25][50]);
+
+t_double convolve(t_convolver *x, int h);
+
+
+
+int C74_EXPORT main(void)
+{
+	t_class *c;
+
+	c = class_new("convolver~", (method)convolver_new, (method)dsp_free,
+		sizeof(t_convolver), 0L, A_DEFFLOAT, A_DEFFLOAT, 0);
+	class_addmethod(c, (method)convolver_dsp, "dsp", A_CANT, 0);
+	class_addmethod(c, (method)convolver_dsp64, "dsp64", A_CANT, 0);
+	class_addmethod(c, (method)convolver_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)convolver_clear, "clear", 0);
+	class_addmethod(c, (method)convolver_int, "int", A_LONG, 0);
+	class_addmethod(c, (method)convolver_float, "float", A_FLOAT, 0);
+	class_dspinit(c);
+	class_register(CLASS_BOX, c);
+	convolver_class = c;
+
+	return 0;
+}
+
+void convolver_dsp(t_convolver *x, t_signal **sp, short *count)
+{
+	x->l_fcon = count[1];	// signal connected to the frequency inlet?
+	x->l_rcon = count[2];	// signal connected to the resonance inlet?
+
+	convolver_clear(x);
+
+	dsp_add(convolver_perform, 6, sp[0]->s_vec, sp[3]->s_vec, x, sp[1]->s_vec, sp[2]->s_vec, sp[0]->s_n);
+}
+
+
+void convolver_dsp64(t_convolver *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
+{
+	x->l_fcon = count[1];	// signal connected to the frequency inlet?
+	x->l_rcon = count[2];	// signal connected to the resonance inlet?
+
+	convolver_clear(x);
+
+	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)convolver_perform64, 0, NULL);
+}
+
+
+t_int *convolver_perform(t_int *w)
+{
+	// assign from parameters
+    t_float *in = (t_float *)(w[1]);
+    t_float *out = (t_float *)(w[2]);
+    t_convolver *x = (t_convolver *)(w[3]);
+    t_float az = x->l_fcon? *(t_float *)(w[4]) : x->az;
+    t_float el = x->l_rcon? *(t_float *)(w[5]) : x->el;
+    int n = (int)(w[6]);
+        
+    if (x->l_obj.z_disabled)
+    	goto out;
+    	
+    
+    // DSP loop
+
+	int h = 0;
+    
+    while (n--) {
+    	
+
+		////
+		////DSP Goes Here
+		////
+
+    }
+  
+out:
+    return (w+7);
+}
+
+
+void convolver_perform64(t_convolver *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam)
+{
+    t_double	*in = ins[0];
+    t_double	*out = outs[0];
+    
+	double val = 0;
+	int h = 0;
+
+    while (sampleframes--) {
+
+    	//x->buff[h] = *in++;   
+		//val = x->buff[h];
+
+		//val = convolve(x, h);
+
+		
+
+		//*out++ = val;
+
+		//h = (++h) % L_BUFF;
+
+		////
+		////DSP Goes Here
+		////
+    }
+   
+}
+
+void convolver_int(t_convolver *x, long n)
+{
+	convolver_float(x,(double)n);
+}
+
+void convolver_float(t_convolver *x, double f)
+{
+	long in = proxy_getinlet((t_object *)x);
+	
+	if (in == 1) {
+		//x->az = f;
+		
+
+	} else if (in == 2) {
+		//x->el = f;
+
+	}
+}
+
+void convolver_clear(t_convolver *x)
+{
+}
+
+
+void convolver_assist(t_convolver *x, void *b, long m, long a, char *s)
+{
+	if (m == 2)
+		sprintf(s,"(signal) Output");
+	else {
+		switch (a) {	
+		case 0: sprintf(s,"(signal) Input"); break;
+		case 1: sprintf(s,"(signal/float) Cutoff Frequency"); break;
+		case 2: sprintf(s,"(signal/float) Resonance Control (0-1)"); break;
+		}
+	}
+}
+
+void *convolver_new()
+{
+    t_convolver *x = object_alloc(convolver_class);
+    dsp_setup((t_pxobject *)x,3);
+
+	// three signal inlets
+	
+    // one signal outlet
+    
+    outlet_new((t_object *)x, "signal");
+
+	for (int i = 0; i < L_BUFF; i++){
+		//x->buff[i] = 0;
+	}
+
+	const char *hrir_l_path = "C:/Home/Project/Binaural/hrir_l.csv";
+	const char *hrir_r_path = "C:/Home/Project/Binaural/hrir_r.csv";
+	const char *IDT_path = "C:/Home/Project/Binaural/IDT.csv";
+
+	get_hrir(hrir_l_path, x->hrir_l);	
+	get_hrir(hrir_r_path, x->hrir_r);
+	get_IDT(IDT_path, x->IDT);
+
+	x->az = 16;
+	x->el = 9;
+	
+
+    return (x);
+}
+
+t_double convolve(t_convolver *x, int h){
+
+	double suml = 0;
+	int buff_index = 0;
+
+	for (int i = 0; i < L_BUFF; i++){
+
+		buff_index = (h - i) % L_BUFF;
+		suml += x->buff[buff_index] * x->hrir_l[x->az][x->el][i];
+
+	}
+	return suml;	
+}
+
+
+bool get_hrir(const char *path, double arr[25][50][200]){
+
+	char ch;
+	char *ptr;
+	char buff[20] = {'0'};
+	int index_buff, i, j, k;
+	index_buff = 0;
+	i = 0;
+	j = 0;
+	k = 0;
+
+	FILE *fp = NULL;
+	fp = fopen(path, "r");
+
+	if (fp == NULL){ 
+		post(path, ": ");
+		post("Error: %d (%s)\n", errno, strerror(errno));
+		return false;
+	}
+
+	while ((ch = fgetc(fp)) != EOF){
+		if (ch != ','){
+			buff[index_buff] = ch;
+			index_buff++;			
+		}
+		else{
+			ptr = &buff[index_buff];
+			arr[k][j][i] = strtod(buff, &ptr);
+			index_buff = 0;		
+			i++;
+			if (i == 200) {
+				i = 0;
+				j++;
+			}
+			if (j == 50){
+				j = 0;
+				k++;
+				k = k % 25;
+				
+			}
+		}			
+	}
+	for (i = 0; i < 200; i++){
+		post("sample # %d %d %d is: %2.16lf", i, j, k, arr[10][20][i]);
+	}
+	post("done");
+	return true;
+}
+
+bool get_IDT(const char *path, double arr[25][50]){
+
+	char ch;
+	char *ptr;
+	char buff[20] = { '0' };
+	int index_buff, i, j, k;
+	index_buff = 0;
+	i = 0;
+	j = 0;
+	k = 0;
+
+	FILE *fp = NULL;
+	fp = fopen(path, "r");
+
+	if (fp == NULL){
+		post(path, ": ");
+		post("Error: %d (%s)\n", errno, strerror(errno));
+		return false;
+	}
+
+	while ((ch = fgetc(fp)) != EOF){
+		if (ch != ','){
+			buff[index_buff] = ch;
+			index_buff++;
+		}
+		else{
+			ptr = &buff[index_buff];
+			arr[k][j] = strtod(buff, &ptr);
+			index_buff = 0;
+			j++;
+			if (j == 50){
+				j = 0;
+				k++;
+				k = k % 25;
+
+			}
+		}
+	}
+	for (j = 0; j < 50; j++){
+		post("sample # %d %d is: %2.16lf", j, k, arr[10][j]);
+	}
+	post("done");
+	return true;
+}
+
+
+
+

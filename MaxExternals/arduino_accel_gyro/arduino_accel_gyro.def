@@ -1,0 +1,4 @@
+LIBRARY delay24.mxe
+
+EXPORTS
+	main
