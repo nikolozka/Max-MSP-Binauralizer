@@ -104,6 +104,7 @@ Hearing is one of the senses we use to perceive our surroundings. However the sy
   \tableofcontents
 
 
+\newpage
 \section{Introduction}
 \subsection{Motivation}
 
@@ -494,13 +495,13 @@ The final piece is responsible for reading the values Arduino outputs and output
 The patcher is a concept closely related to the Max environment. It can be thought as a netlist that is characteristic of graphical programming languages such as LabView. The patcher is where the components discussed above fit together. It takes care of timing issues. Ties the audio processing modules to the sound source whether its an ezadc object that takes care of live audio input from a microphone or the player object that plays back audio files. The processed output is piped to the ezdac object that acts as a digital to analog converter and produces output. In addition to that a couple of control knobs are included for manual adjustment audio processing objects. The patcher also responds to midi control input because ease of work with midi is a feature of Max I was really excited about.\\
 The patcher:\\
 
-\begin{center}
+\
 \begin{figure}[H]
-\includegraphics[scale=0.6]{patcher.png}
+\includegraphics[scale=0.8]{patcher.png}
  \caption{Max Patching window with the project patcher}
     \label{fig:patc}
 \end{figure}
-\end{center}  
+ 
 
 \section{Testing and Evaluation}
 
@@ -509,7 +510,7 @@ The performance of the algorithm implementation was tested against a Matlab scri
 As to where the spatialization is concerned the results are harder to evaluate as the amount of directionality introduced is highly dependent on how closely the shape of the listener's head matches the head of a subject whose HRIRs were recorder. Three test were devised to asses the azimuth precision of head tracking and the ability to localize sound. The limited time and materials didn't allow for a reliable setup for measuring elevation\\
 
 \begin{itemize}
-\item Experiment One: an experiment was carried out to ascertain the head tracking properties of the system. A crude setup was created for this purpose. A circle roughly one meter in diameter was subdivided into section in appropriate angle increments. A pointer was attached to the headphones perpendicular to the plane defined by the headband to keep track of real direction. such a setup is not biased y deviations in the angle from 90\degree since the headphones were re-calibrated using the recenter button at the beginning  of the test. The values were recorded immediately after re-calibration, 5 minutes later and 15 minutes later. The Following values were obtained.
+\item Experiment One: an experiment was carried out to ascertain the head tracking properties of the system. A crude setup was created for this purpose. A circle roughly one meter in diameter was subdivided into sections in appropriate angle increments. A pointer was attached to the headphones perpendicular to the plane defined by the headband to keep track of real direction. such a setup is not biased y deviations in the angle from 90\degree since the headphones were re-calibrated using the recenter button at the beginning  of the test. The values were recorded immediately after re-calibration, 5 minutes later and 15 minutes later. The following values were obtained.
 
 \begin {center}
 \begin {itemize}
@@ -525,7 +526,7 @@ As to where the spatialization is concerned the results are harder to evaluate a
 \begin{center}
 \begin {itemize}
 
-\item over 15 minutes 5\degree  drift was accumulated. quantization comes into play as well here.
+\item over 15 minutes 5\degree  drift was accumulated. effects of quantization come into play as well here.
 
 \end {itemize}
 \end{center}
@@ -544,10 +545,10 @@ As to where the spatialization is concerned the results are harder to evaluate a
 
 Further notes on testing and evaluation:
 \begin{itemize}
-\item Head-tracking - The system is able to track the position of the listeners head with desired precision. There is a perceptible amount of drift over time, however since the patcher recenter button the system can be recalibrated at any point. Moreover the sensor has 6DoF and the data that is used is recorded with just 2DoF so head tracking precision issues don't affect it too much
-\item DSP - The system is capable of performing appropriate processing on multiple channels, while keeping the latency low and quality of the sound high. The patcher manages to perform it's processing without a significant load on the processor. The latency is imperceptible for all intents and purposes. The audio suffers from few auditory distortions when switching from one HRIR to another however this can be helped using a simple averaging filter on a frame of several samples whenever control inputs change
+\item Head-tracking - The system is able to track the position of the listeners head with desired precision. There is a perceptible amount of drift over time, however since the patcher recenter button the system can be recalibrated at any point. Moreover the sensor has 6DoF and the data that is used is recorded with just 2DoF, so head tracking precision issues don't affect it too much
+\item DSP - The system is capable of performing appropriate processing on multiple channels, while keeping the latency low and quality of the sound high. The patcher manages to perform it's processing without a significant load on the processor. The latency is imperceptible for all intents and purposes. The audio suffers from few auditory distortions when switching from one HRIR to another, however this can be helped using a simple averaging filter on a frame of several samples whenever control inputs change
 \item Sound - The test subjects reported that the effect introduced was "clearly distinguishable" and introduced "imperceptible" to "unobtrusive" auditory artifacts (mostly in form of low volume clicks mentioned above)
-\item The listeners recorded jumps between sides if the setup is turned to extremes. This is unavoidable since the azimuths are defined in the (-80, 80) and there is bound to be a jump after a 180\degree rotation in either directions.
+\item The listeners reported jumps between sides, if the setup is turned to extremes. This is unavoidable since the azimuths are defined in the (-80, 80) and there is bound to be a jump after a 180\degree rotation in either directions.
 \end{itemize}
 
 \section{Deliverable}
